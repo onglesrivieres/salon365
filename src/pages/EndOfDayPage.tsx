@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Download, Printer, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Download, Printer, Plus, ChevronLeft, ChevronRight, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { supabase, Technician } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
 import { useToast } from '../components/ui/Toast';
@@ -7,6 +7,16 @@ import { TicketEditor } from '../components/TicketEditor';
 import { useAuth } from '../contexts/AuthContext';
 import { Permissions } from '../lib/permissions';
 import { WeeklyCalendarView } from '../components/WeeklyCalendarView';
+
+interface AttendanceRecord {
+  employee_id: string;
+  employee_name: string;
+  work_date: string;
+  check_in_time: string;
+  check_out_time?: string;
+  total_hours?: number;
+  status: string;
+}
 
 interface TechnicianSummary {
   technician_id: string;
@@ -43,6 +53,7 @@ interface EndOfDayPageProps {
 
 export function EndOfDayPage({ selectedDate, onDateChange }: EndOfDayPageProps) {
   const [summaries, setSummaries] = useState<TechnicianSummary[]>([]);
+  const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'detail' | 'weekly'>('detail');
   const [weeklyData, setWeeklyData] = useState<Map<string, Map<string, { tips_cash: number; tips_card: number; tips_total: number }>>>(new Map());
@@ -225,6 +236,28 @@ export function EndOfDayPage({ selectedDate, onDateChange }: EndOfDayPageProps) 
     }
   }
 
+  async function fetchAttendanceData() {
+    if (!selectedStoreId) return;
+
+    try {
+      const isTechnician = session?.role_permission === 'Technician';
+
+      const { data, error } = await supabase.rpc('get_store_attendance', {
+        p_store_id: selectedStoreId,
+        p_start_date: selectedDate,
+        p_end_date: selectedDate,
+        p_employee_id: isTechnician ? session?.employee_id : null
+      });
+
+      if (error) throw error;
+
+      setAttendanceData(data || []);
+    } catch (error) {
+      console.error('Error fetching attendance:', error);
+      showToast('Failed to load attendance data', 'error');
+    }
+  }
+
   async function fetchEODData() {
     try {
       setLoading(true);
@@ -390,7 +423,8 @@ export function EndOfDayPage({ selectedDate, onDateChange }: EndOfDayPageProps) 
   }
 
   function exportCSV() {
-    const headers = [
+    // Technician Summary
+    const techHeaders = [
       'Technician',
       'Services Done',
       'Revenue',
@@ -401,7 +435,7 @@ export function EndOfDayPage({ selectedDate, onDateChange }: EndOfDayPageProps) 
       'Tips Total',
     ];
 
-    const rows = summaries.map((s) => [
+    const techRows = summaries.map((s) => [
       s.technician_name,
       s.services_count.toString(),
       s.revenue.toFixed(2),
@@ -412,7 +446,42 @@ export function EndOfDayPage({ selectedDate, onDateChange }: EndOfDayPageProps) 
       s.tips_total.toFixed(2),
     ]);
 
-    const csv = [headers, ...rows].map((row) => row.join(',')).join('\n');
+    // Attendance Summary
+    const attendanceHeaders = [
+      'Employee',
+      'Check In',
+      'Check Out',
+      'Hours',
+      'Status',
+    ];
+
+    const attendanceRows = attendanceData.map((record) => [
+      record.employee_name,
+      new Date(record.check_in_time).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      }),
+      record.check_out_time
+        ? new Date(record.check_out_time).toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          })
+        : '',
+      record.total_hours ? record.total_hours.toFixed(2) : '',
+      record.status,
+    ]);
+
+    const csv = [
+      'Technician Summary',
+      techHeaders.join(','),
+      ...techRows.map(row => row.join(',')),
+      '',
+      'Attendance Summary',
+      attendanceHeaders.join(','),
+      ...attendanceRows.map(row => row.join(',')),
+    ].join('\n');
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -422,7 +491,7 @@ export function EndOfDayPage({ selectedDate, onDateChange }: EndOfDayPageProps) 
     a.click();
     window.URL.revokeObjectURL(url);
 
-    showToast('Tip Report exported successfully', 'success');
+    showToast('End of Day Report exported successfully', 'success');
   }
 
   function handlePrint() {
@@ -489,6 +558,22 @@ export function EndOfDayPage({ selectedDate, onDateChange }: EndOfDayPageProps) 
     const tooSlow = elapsedMinutes >= item.duration_min * 1.3;
 
     return tooFast || tooSlow;
+  }
+
+  function processAttendanceData() {
+    const summary: { [employeeId: string]: { employeeName: string; sessions: AttendanceRecord[] } } = {};
+
+    attendanceData.forEach((record) => {
+      if (!summary[record.employee_id]) {
+        summary[record.employee_id] = {
+          employeeName: record.employee_name,
+          sessions: []
+        };
+      }
+      summary[record.employee_id].sessions.push(record);
+    });
+
+    return Object.values(summary);
   }
 
   return (
@@ -715,6 +800,82 @@ export function EndOfDayPage({ selectedDate, onDateChange }: EndOfDayPageProps) 
                         })}
                       </div>
                     </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Attendance Summary Section */}
+      <div className="bg-white rounded-lg shadow mb-3">
+        <div className="p-2 border-b border-gray-200">
+          <h3 className="text-base font-semibold text-gray-900">Attendance Summary</h3>
+        </div>
+        {loading ? (
+          <div className="flex items-center justify-center h-32">
+            <div className="text-sm text-gray-500">Loading...</div>
+          </div>
+        ) : processAttendanceData().length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-sm text-gray-500">No attendance records for this date</p>
+          </div>
+        ) : (
+          <div className="p-2 overflow-x-auto">
+            <div className="flex gap-2 min-w-max">
+              {processAttendanceData().map((employee) => (
+                <div
+                  key={employee.employeeName}
+                  className="flex-shrink-0 w-[150px] border border-gray-200 rounded-md bg-white shadow-sm"
+                >
+                  <div className="bg-gray-50 border-b border-gray-200 px-2 py-1 rounded-t-md">
+                    <h4 className="text-xs font-semibold text-gray-900 leading-tight truncate">
+                      {employee.employeeName}
+                    </h4>
+                  </div>
+                  <div className="p-2 space-y-1">
+                    {employee.sessions.map((session, index) => (
+                      <div key={index} className="border border-gray-200 rounded p-1 bg-gray-50">
+                        <div className={`inline-flex items-center gap-1 px-1 py-0.5 rounded text-xs ${
+                          session.status === 'checked_in'
+                            ? 'bg-green-100 text-green-700'
+                            : session.status === 'checked_out'
+                            ? 'bg-gray-100 text-gray-700'
+                            : 'bg-orange-100 text-orange-700'
+                        }`}>
+                          {session.status === 'checked_in' ? (
+                            <Clock className="w-3 h-3" />
+                          ) : session.status === 'checked_out' ? (
+                            <CheckCircle className="w-3 h-3" />
+                          ) : (
+                            <XCircle className="w-3 h-3" />
+                          )}
+                          <span>{session.status === 'checked_in' ? 'In' : 'Out'}</span>
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          {new Date(session.check_in_time).toLocaleTimeString('en-US', {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
+                          })}
+                        </div>
+                        {session.check_out_time && (
+                          <div className="text-xs text-gray-600">
+                            {new Date(session.check_out_time).toLocaleTimeString('en-US', {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true
+                            })}
+                          </div>
+                        )}
+                        {session.total_hours && (
+                          <div className="text-xs font-semibold text-gray-900">
+                            {session.total_hours.toFixed(1)}h
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}
