@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    overscroll-behavior-y: none;
+    touch-action: pan-x pan-y;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  @media (max-width: 768px) {
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      padding: 8px;
+    }
+  }
+}
+
+@layer utilities {
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .flash-red-border {
+    border-color: rgb(220 38 38);
+    border-width: 2px;
+    border-style: solid;
+  }
+
+  .flash-red {
+    background-color: rgb(220 38 38);
+    color: white;
+  }
+
+  .device-iphone {
+    max-width: 430px;
+    margin: 0 auto;
+  }
+
+  .device-iphone .layout-main {
+    font-size: 14px;
+  }
+
+  .device-iphone input,
+  .device-iphone select,
+  .device-iphone button {
+    font-size: 16px;
+  }
+
+  .device-ipad {
+    max-width: 100%;
+  }
+
+  .device-ipad .layout-main {
+    font-size: 15px;
+  }
+
+  .device-ipad input,
+  .device-ipad select,
+  .device-ipad button {
+    font-size: 15px;
+  }
+
+  @media (max-width: 430px) {
+    .device-iphone {
+      max-width: 100%;
+    }
+  }
+
+  @keyframes slide-in {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-in-right {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slide-in-left {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  .animate-slide-in {
+    animation: slide-in 0.3s ease-out;
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 0.3s ease-out;
+  }
+
+  .animate-slide-in-left {
+    animation: slide-in-left 0.3s ease-out;
+  }
+
+  @keyframes slide-down {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-slideDown {
+    animation: slide-down 0.4s ease-out;
+  }
+}
