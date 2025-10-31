@@ -25,6 +25,8 @@
 */
 
 -- Function: Get services sorted by popularity (usage count)
+DROP FUNCTION IF EXISTS get_services_by_popularity(uuid);
+
 CREATE OR REPLACE FUNCTION get_services_by_popularity(
   p_store_id uuid DEFAULT NULL
 )
@@ -69,13 +71,15 @@ BEGIN
   FROM services s
   LEFT JOIN service_usage su ON s.id = su.service_id
   WHERE s.active = true
-  ORDER BY 
+  ORDER BY
     COALESCE(su.total_usage, 0) DESC,
     s.code ASC;
 END;
 $$;
 
 -- Function: Get sorted technicians for ticket editor
+DROP FUNCTION IF EXISTS get_sorted_technicians_for_store(uuid);
+
 CREATE OR REPLACE FUNCTION get_sorted_technicians_for_store(
   p_store_id uuid
 )
@@ -136,8 +140,8 @@ BEGIN
   WHERE e.status = 'Active'
     AND 'Technician' = ANY(e.role)
     AND EXISTS (
-      SELECT 1 FROM employee_stores es 
-      WHERE es.employee_id = e.id 
+      SELECT 1 FROM employee_stores es
+      WHERE es.employee_id = e.id
       AND es.store_id = p_store_id
     )
   ORDER BY

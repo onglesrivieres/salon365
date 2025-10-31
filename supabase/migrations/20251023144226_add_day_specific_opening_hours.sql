@@ -12,9 +12,7 @@
     - Set opening hours for existing stores based on their schedules
 
   4. Notes
-    - Ongles Rivière-du-Loup (RIVIERES): Mon-Wed: 9:00-17:30, Thurs-Fri: 9:00-21:00, Sat: 9:00-17:00, Sun: 10:00-17:00
-    - Ongles Maily: Mon-Wed: 9:00-17:30, Thurs-Fri: 9:00-19:00, Sat: 9:00-17:00, Sun: 10:00-17:00
-    - Ongles Charlesbourg: Will use default 10:00 for all days
+    - Sans Souci Ongles & Spa (SS): Uses default opening hours
 */
 
 -- Add opening_hours JSONB column to stores table
@@ -28,34 +26,8 @@ BEGIN
   END IF;
 END $$;
 
--- Update opening hours for Ongles Rivieres
-UPDATE stores 
-SET opening_hours = jsonb_build_object(
-  'monday', '09:00:00',
-  'tuesday', '09:00:00',
-  'wednesday', '09:00:00',
-  'thursday', '09:00:00',
-  'friday', '09:00:00',
-  'saturday', '09:00:00',
-  'sunday', '10:00:00'
-)
-WHERE code = 'RIVIERES';
-
--- Update opening hours for Ongles Maily
-UPDATE stores 
-SET opening_hours = jsonb_build_object(
-  'monday', '09:00:00',
-  'tuesday', '09:00:00',
-  'wednesday', '09:00:00',
-  'thursday', '09:00:00',
-  'friday', '09:00:00',
-  'saturday', '09:00:00',
-  'sunday', '10:00:00'
-)
-WHERE code = 'MAILY';
-
--- Update opening hours for Ongles Charlesbourg (default to 10:00 for all days)
-UPDATE stores 
+-- Update opening hours for Sans Souci Ongles & Spa (default to 10:00 for all days)
+UPDATE stores
 SET opening_hours = jsonb_build_object(
   'monday', '10:00:00',
   'tuesday', '10:00:00',
@@ -65,7 +37,7 @@ SET opening_hours = jsonb_build_object(
   'saturday', '10:00:00',
   'sunday', '10:00:00'
 )
-WHERE code = 'CHARLESBOURG';
+WHERE code = 'SS';
 
 -- Update can_checkin_now function to use day-specific opening times
 CREATE OR REPLACE FUNCTION can_checkin_now(p_store_id uuid)

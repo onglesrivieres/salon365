@@ -1,11 +1,11 @@
 /*
-  # Multi-Store POS Schema
+  # Single-Store POS Schema
 
   1. New Tables
     - `stores`
       - `id` (uuid, primary key)
       - `name` (text) - Store display name
-      - `code` (text, unique) - Short code (e.g., "OM", "OC", "OR")
+      - `code` (text, unique) - Short code (e.g., "SS")
       - `active` (boolean, default true)
       - `created_at` (timestamptz)
       - `updated_at` (timestamptz)
@@ -175,9 +175,7 @@ CREATE INDEX IF NOT EXISTS idx_sale_tickets_store_id ON sale_tickets(store_id);
 CREATE INDEX IF NOT EXISTS idx_store_services_store_id ON store_services(store_id);
 CREATE INDEX IF NOT EXISTS idx_store_services_service_id ON store_services(service_id);
 
--- Seed the 3 stores
+-- Seed the single store
 INSERT INTO stores (name, code, active) VALUES
-  ('Ongles Maily', 'OM', true),
-  ('Ongles Charlesbourg', 'OC', true),
-  ('Ongles Rivières', 'OR', true)
+  ('Sans Souci Ongles & Spa', 'SS', true)
 ON CONFLICT (code) DO NOTHING;

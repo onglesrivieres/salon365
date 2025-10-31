@@ -9,7 +9,7 @@
 
   1. **Populate store_services Table**
      - Clone all active services from the global `services` table
-     - Create entries for each of the three stores (Ongles Maily, Ongles Charlesbourg, Ongles Rivières)
+     - Create entries for the single store (Sans Souci Ongles & Spa)
      - Inherit initial prices from global `base_price`
      - Inherit initial durations from global `duration_min`
      - Set all cloned services as active

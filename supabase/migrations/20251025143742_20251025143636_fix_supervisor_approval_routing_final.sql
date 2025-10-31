@@ -183,6 +183,8 @@ $$;
 -- FIX TECHNICIAN APPROVAL FUNCTION
 -- ============================================================================
 
+DROP FUNCTION IF EXISTS get_pending_approvals_for_technician(uuid, uuid);
+
 CREATE OR REPLACE FUNCTION get_pending_approvals_for_technician(
   p_store_id uuid,
   p_employee_id uuid

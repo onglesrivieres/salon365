@@ -304,6 +304,8 @@ END;
 $$;
 
 -- Update get_pending_approvals_for_technician to only show technician-level approvals
+DROP FUNCTION IF EXISTS get_pending_approvals_for_technician(uuid, uuid);
+
 CREATE OR REPLACE FUNCTION get_pending_approvals_for_technician(
   p_employee_id uuid,
   p_store_id uuid

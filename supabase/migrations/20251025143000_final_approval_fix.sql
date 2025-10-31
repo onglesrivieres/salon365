@@ -359,4 +359,4 @@ BEGIN
 END;
 $$;
 
-COMMENT ON MIGRATION IS 'Final fix: Corrects trigger logic, fixes all existing tickets, simplifies approval functions to trust the data';
+-- Final fix: Corrects trigger logic, fixes all existing tickets, simplifies approval functions to trust the data

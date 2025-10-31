@@ -1,0 +1,69 @@
+/*
+  # Create Admin User Script (Fixed)
+
+  This script creates an admin user with full permissions and PIN 8228.
+  Uses only valid roles that pass the database constraints.
+*/
+
+DO $$
+DECLARE
+  admin_user_id uuid;
+  admin_store_id uuid;
+BEGIN
+
+  -- Get the store ID for the main store
+  SELECT id INTO admin_store_id 
+  FROM stores 
+  WHERE name = 'Sans Souci Ongles & Spa' 
+  AND active = true
+  LIMIT 1;
+
+  -- If store doesn't exist, create it
+  IF admin_store_id IS NULL THEN
+    INSERT INTO stores (name, code, active) 
+    VALUES ('Sans Souci Ongles & Spa', 'SS', true)
+    RETURNING id INTO admin_store_id;
+  END IF;
+
+  -- Remove existing admin users to avoid conflicts
+  DELETE FROM employees 
+  WHERE 'Admin' = ANY(role) OR 'Owner' = ANY(role) OR 'Manager' = ANY(role);
+
+  -- Create the admin user with valid roles only
+  INSERT INTO employees (
+    legal_name,
+    display_name,
+    role,
+    role_permission,
+    status,
+    can_reset_pin,
+    store_id,
+    notes,
+    pay_type
+  ) VALUES (
+    'Administrator',
+    'Admin',
+    ARRAY['Manager'],  -- Use only valid role
+    'Admin',
+    'Active',
+    true,
+    admin_store_id,
+    'System Administrator with full access',
+    'hourly'
+  )
+  RETURNING id INTO admin_user_id;
+
+  -- Ensure pgcrypto extension is available
+  CREATE EXTENSION IF NOT EXISTS pgcrypto;
+  
+  -- Update the admin user with PIN 8228 using the set_employee_pin function
+  SELECT set_employee_pin(admin_user_id, '8228') INTO admin_user_id;
+
+  -- Verify the user was created correctly
+  RAISE NOTICE 'Admin user created with ID: %', admin_user_id;
+  RAISE NOTICE 'Display Name: Admin';
+  RAISE NOTICE 'Role Permission: Admin';
+  RAISE NOTICE 'Can Reset PIN: true';
+  RAISE NOTICE 'PIN: 8228';
+
+END $$;

@@ -24,7 +24,7 @@ RETURNS TABLE (
   employee_id uuid,
   display_name text,
   role text[],
-  role_permission text,
+  role_permission role_permission_type,
   can_reset_pin boolean,
   store_id uuid
 )
@@ -34,7 +34,7 @@ SET search_path = public, extensions, pg_temp
 AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
+  SELECT
     e.id as employee_id,
     e.display_name,
     e.role,

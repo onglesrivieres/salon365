@@ -233,8 +233,8 @@ AS $$
   SELECT
     'Supervisor closed but did not perform (should be technician level)' as issue_type,
     COUNT(*) as ticket_count,
-    ARRAY_AGG(id::text) FILTER (WHERE ordinality <= 5) as example_ticket_ids
-  FROM sale_tickets WITH ORDINALITY
+    ARRAY_AGG(id::text) as example_ticket_ids
+  FROM sale_tickets
   WHERE approval_status = 'pending_approval'
     AND approval_required_level = 'manager'
     AND closed_by_roles @> '["Supervisor"]'::jsonb
@@ -250,8 +250,8 @@ AS $$
   SELECT
     'Multiple performers, one closed (should be technician level)' as issue_type,
     COUNT(*) as ticket_count,
-    ARRAY_AGG(id::text) FILTER (WHERE ordinality <= 5) as example_ticket_ids
-  FROM sale_tickets WITH ORDINALITY
+    ARRAY_AGG(id::text) as example_ticket_ids
+  FROM sale_tickets
   WHERE approval_status = 'pending_approval'
     AND approval_required_level IN ('supervisor', 'manager')
     AND (
@@ -266,8 +266,8 @@ AS $$
   SELECT
     'Correctly routed to technician level' as issue_type,
     COUNT(*) as ticket_count,
-    ARRAY_AGG(id::text) FILTER (WHERE ordinality <= 5) as example_ticket_ids
-  FROM sale_tickets WITH ORDINALITY
+    ARRAY_AGG(id::text) as example_ticket_ids
+  FROM sale_tickets
   WHERE approval_status = 'pending_approval'
     AND approval_required_level = 'technician';
 $$;
